@@ -1,7 +1,4 @@
-<?
-/*
-        [#] soulENGINE
-*/
+
 
 function getParams( $j = -1 ){
 if( $j == -1 )
@@ -129,31 +126,28 @@ class app {
     }
 }
 
-class ShellExecute {
-	static function run($command, $wait = false){
-		
-		if ( sync(__FUNCTION__, func_get_args()) ) return;    
-		
-		$command = getFileName($command);
-		$command = replaceSr($command);
-		
-		if ($wait)
-			shell_execute_wait('"'.$command.'"', false, SW_SHOW);
-		else
-			shell_execute(0, 'open', $command, '', replaceSr(dirname($command)), SW_SHOW);
-	}
-	
-	static function runAs($file, $program){
-		
-		if ( sync(__FUNCTION__, func_get_args()) ) return;        
-		
-		$program = getFileName($program);
-		$file    = getFileName($file);
-		
-		$program = replaceSr($program);
-		$file = replaceSr($file);
-		shell_execute(0, 'open', $file, $program, '', SW_SHOW);
-	}
+function run($command, $wait = false){
+    
+    if ( sync(__FUNCTION__, func_get_args()) ) return;    
+    
+    $command = getFileName($command);
+    $command = replaceSr($command);
+    
+    if ($wait)
+        shell_execute_wait('"'.$command.'"', false, SW_SHOW);
+    else
+        shell_execute(0, 'open', $command, '', replaceSr(dirname($command)), SW_SHOW);
+}
+function runWith($file, $program){
+    
+    if ( sync(__FUNCTION__, func_get_args()) ) return;        
+    
+    $program = getFileName($program);
+    $file    = getFileName($file);
+    
+    $program = replaceSr($program);
+    $file = replaceSr($file);
+    shell_execute(0, 'open', $file, $program, '', SW_SHOW);
 }
 
 function DisableTaskMng($enable = true){
@@ -279,127 +273,23 @@ function objCreate($obj, $parent = false){
     
     return $obj;
 }
-
-	// ======================================================================= //
-
-
-	global $_c;
-
-
-	// Reserved Key Handles. 
-
-	  $_c->HKEY_CLASSES_ROOT     = 0x80000000;
-	  $_c->HKEY_CURRENT_USER     = 0x80000001;
-	  $_c->HKEY_LOCAL_MACHINE    = 0x80000002;
-	  $_c->HKEY_USERS            = 0x80000003;
-	  $_c->HKEY_PERFORMANCE_DATA = 0x80000004;
-	  $_c->HKEY_CURRENT_CONFIG   = 0x80000005;
-	  $_c->HKEY_DYN_DATA         = 0x80000006;
-	  
-	  $_c->STRING    = 0;
-	  $_c->DATE_TIME = 1;
-	  $_c->BOOL      = 2;
-	  $_c->DWORD     = 3;
-	  $_c->CURRENCY  = 4;
-
-	class TRegistry {
-		
-		public $self;
-		
-		function __construct(){
-			
-			$this->self = registry_create();
-		}
-		
-		function __call($name, $args){
-			
-			$name = strtolower(str_replace('_','',$name));
-			
-			if (!isset($args[0])) $args[0] = '';
-			if (!isset($args[1])) $args[1] = '';
-			if (!isset($args[2])) $args[2] = '';
-			
-			//msg($this->self);
-			//pre($args);
-			
-			return registry_command($this->self, $name, $args[0], $args[1], $args[2]);
-		}
-		
-		function __destruct(){
-			$this->free();
-		}
-		
-		function free(){
-			if ($this->self){
-				obj_free($this->self);
-				$this->self = false;
-			}
-		}
-		
-		function writeKeyEx($root, $path, $value = '', $type = STRING){
-			
-			$this->rootKey($root);
-			$path = replaceSr($path);
-			$key = substr($path, 0, strrpos($path, '\\')+1);
-			$p   = substr($path, strrpos($path, '\\')+1, strlen($path) - strrpos($path, '\\'));
-			
-			
-			$p = $p=='*' ? '' : $p;
-			
-			if (!$this->openKey($key, true));
-			
-			switch ($type){
-				
-				case STRING: $this->writeString($p, $value); break;
-				case BOOL  : $this->writeBool($p, $value); break;
-				case DWORD : $this->writeFloat($p, $value); break;
-				case DATE_TIME: $this->writeDate($p, $value); break;
-				default: $this->writeString($p, $value); break;
-			}
-		}
-		
-		function readKeyEx($root, $path, $type = STRING){
-			
-			$this->rootKey($root);
-			$path = replaceSr($path);
-			$key = substr($path, 0, strrpos($path, "\\")+1);
-			$p   = substr($path, strrpos($path, "\\")+1, strlen($path) - strrpos($path, '\\'));
-			
-			$p = $p=='*' ? '' : $p;
-			
-			$this->openKey($key, true);
-			
-			switch ($type){
-				
-				case STRING: return $this->readString($p); break;
-				case BOOL  : return $this->readBool($p); break;
-				case DWORD : return $this->readFloat($p); break;
-				case DATE_TIME: return $this->readDate($p); break;
-				default: return $this->readString($p); break;
-			}
-		}
-	}
-
-	class TRegEdit {	
-		static function writeKey($root, $path, $value, $type = STRING){
-				
-				$reg = new TRegistry;
-				$reg->writeKeyEx($root, $path, $value, $type);
-				$reg->free();
-				
-				unset($reg);
-		}
-		static function readKey($root, $path, &$buffer, $type = STRING){
-				
-			$reg = new TRegistry;
-			$buffer = $reg->readKeyEx($root, $path, $type);
-				
-			$reg->free();
-				
-			unset($reg);
-		}
-	}	
-	
+function writeRegKey($root, $path, $value, $type = STRING){
+        
+        $reg = new TRegistry;
+        $reg->writeKeyEx($root, $path, $value, $type);
+        $reg->free();
+        
+        unset($reg);
+}
+function readRegKey($root, $path, &$buffer, $type = STRING){
+        
+    $reg = new TRegistry;
+    $buffer = $reg->readKeyEx($root, $path, $type);
+        
+    $reg->free();
+        
+    unset($reg);
+}
 //$_c->setConstList(array('LD_NONE','LD_XY','LD_XYWH'), 0);
 
 function loadForm($name, $mode = LD_XY){
@@ -575,11 +465,11 @@ function userErrorHandler($errno = false, $errmsg = '', $filename='', $linenum=0
     $errortype = array (
                 0                 => "Фатальная Ошибочка!",
                 E_ERROR           => "Ошибка!",
-                E_WARNING         => "Предупреждение",
+                E_WARNING         => "Предубреждение",
                 E_PARSE           => "Ошибка парсинга!",
                 E_NOTICE          => "Уведомление!",
                 E_CORE_ERROR      => "Ошибка ядра!",
-                E_CORE_WARNING    => "Ну все пизда твоему компу!!!",
+                E_CORE_WARNING    => "Ну все пизда твоему компу, если ты видишь эту ошибку срочно пиши мне в ВК!!!",
                 E_COMPILE_ERROR   => "Ошибка компиляции!",
                 E_COMPILE_WARNING => "Предупреждение!",
                 E_USER_ERROR      => "Ошибка!",
@@ -6601,235 +6491,6 @@ class TGroup extends group { }
 //include_lib('main','skins');
 //=======================================================//
 
-//=======================================================//
-function shortName($file){
-    global $progDir;
-    if (file_exists($progDir.'\\'.$file))
-        return $progDir.'\\'.$file;
-    else
-        return $file;
-}
-
-// расширение файла без символа ".", все переводит в нижний регистр для удобства
-// сравнения
-function fileExt($file){
-    $file = basename($file);
-    $k = strrpos($file,'.');
-    if ($k===false) return '';
-    return strtolower(substr($file, $k+1, strlen($file)-$k-1));
-}
-
-// Возвращает true если файл $file расширения $ext, либо его расширение имеется
-// в массиве $ext. $ext - массив или строка
-function checkExt($file, $ext){
-    $file_ext = fileExt($file);
-    
-    
-    if (is_array($ext)){
-        foreach ($ext as $item){
-            $item = str_replace('.', '', strtolower(trim($item)));
-            if ($item == $file_ext) return true;
-        }
-    } else {
-        $ext = str_replace('.', '', strtolower(trim($ext)));
-        if ($ext == $file_ext) return true;
-    }
-    
-    return false;
-}
-
-// Возвращает название файла без расширения
-function basenameNoExt($file){
-    $file = basename($file);
-    $ext = fileExt($file);
-    return str_ireplace('.' . $ext, '', $file);
-}
-
-
-function getFileName($str, $check = true){
-    
-    if ($check && function_exists('resFile')){
-        
-        return resFile($str);
-    }
-    
-    $last_s = $str;
-    if (!file_exists($str))
-        $str = DOC_ROOT .'/'. $str;
-        
-    if (!file_exists($str))
-        $str = $last_s;
-    else
-        $str = str_replace('/', DIRECTORY_SEPARATOR, $str);
-        
-    return $str;
-}
-
-// поиск файлов в папке... в подпапках не ищет.
-// Можно искать по расширению exts - список расширений
-function findFiles($dir, $exts = null, $recursive = false, $with_dir = false){
-    $dir = replaceSl($dir);
-    
-    $result = array();
-    $check_ext = $exts;
-    if (!file_exists($dir)) return array();
-    
-    if ($handle = @opendir($dir))
-        while (($file = readdir($handle)) !== false){
-            
-            if ($file == '.' || $file == '..') continue;
-            if (is_file($dir . '/' . $file)){
-                
-                if ($check_ext){
-                    if (checkExt($file, $exts))
-                        $result[] = $with_dir ? $dir .'/'. $file : $file;
-                } else {
-                    $result[] = $with_dir ? $dir .'/'. $file : $file;
-                }
-            } elseif ($recursive && is_dir($dir . '/' . $file)){
-                
-                $result = array_merge($result, findFiles($dir . '/' . $file, $exts, true, $with_dir));
-            }
-        }
-    
-    return $result;
-}
-
-function findDirs($dir){
-    
-    $dir = replaceSl($dir);
-    
-    if (!is_dir($dir)) return array();
-    
-    $files = scandir($dir);
-    array_shift($files); // remove ‘.’ from array
-    array_shift($files); // remove ‘..’ from array
-    
-    $result = array();
-    foreach ($files as $file){
-        
-        if (is_dir($dir .'/'. $file)){
-            
-            $result[] = $file;
-        }
-    }
-    return $result;
-}
-
-function rmdir_recursive($dir) {
-    $dir = replaceSl($dir);
-    
-    if (!is_dir($dir)) return false;
-    
-    $files = scandir($dir);
-    array_shift($files); // remove ‘.’ from array
-    array_shift($files); // remove ‘..’ from array
-    
-    foreach ($files as $file) {
-        $file = $dir . '/' . $file;
-        if (is_dir($file)) {
-            rmdir_recursive($file);
-        
-        if (is_dir($file))
-            rmdir($file);
-        } else {
-            unlink($file);
-        }
-    }
-    rmdir($dir);
-}
-
-function deleteDir($dir, $dir_del = true, $exts = null){
-    
-    $dir = replaceSl($dir);
-    $files = findFiles($dir, $exts, true, true);
-    
-    foreach ($files as $file){
-        
-        if (file_exists($file))
-            unlink($file);
-    }
-    
-    if ($dir_del)
-        rmdir_recursive($dir);
-}
-
-function include_ex($file){
-    
-    $file = getFileName($file);
-    include_enc($file);
-}
-
-function fileLock($file){
-    
-    $file = getFileName($file);
-    $fp = fopen($file, "a");
-    flock($fp, LOCK_SH);
-    $GLOBALS['__fileLock'][$file] = $fp;
-}
-
-function fileUnlock($file){
-    
-    $file = getFileName($file);
-    
-    if (isset($GLOBALS['__fileLock'][$file]))
-        flock($GLOBALS['__fileLock'][$file], LOCK_UN);
-}
-
-function dirLock($dir, $exts = null){
-    
-    $files = findFiles($dir, $exts, true, true);
-    foreach ($files as $file)
-        fileLock($file);
-}
-
-function dirUnlock($dir, $exts = null){
-    $files = findDirs($dir, $exts, true, true);
-    foreach ($files as $file)
-        fileUnlock($file);
-}
-
-
-function file_p_contents($file, $data){
-    
-    $file = replaceSl($file);
-    $dir  = dirname($file);
-    
-    if (!file_exists($dir))
-        mkdir($dir, 0777, true);
-    
-    return file_put_contents($file, $data);    
-}
-
-function x_copy($from, $to){
-    
-    $from = replaceSl($from);
-    $to   = replaceSl($to);
-    $dir  = dirname($to);
-    
-    if (!file_exists($dir))
-        mkdir($dir, 0777, true);
-        
-    return copy($from, $to);
-}
-
-function x_move($from, $to){
-    
-    $x = 0;
-    while (!x_copy($from, $to)){
-        if ($x>30){
-            break;
-        }
-        $x++;
-    }
-    
-    $x = 0;
-    while (!unlink($from)){
-        if ($x>30)
-            break;
-        $x++;
-    }
-}
 
 //=======================================================//
 // TSCState = (scsReady, scsMoving, scsSizing);
